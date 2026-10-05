@@ -1,0 +1,151 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+:root {
+  --radius: 0.5rem;
+
+  /* Айдентика Анненкирхе: тёплый светлый фон, графитовый текст, терракота
+     («обожжённый кирпич») как основной цвет. Спецификация: 2026-09-30-identity-design.md. */
+  --background: #fbf9f6;
+  --foreground: #2f2a26;
+  --card: #ffffff;
+  --card-foreground: #2f2a26;
+  --popover: #ffffff;
+  --popover-foreground: #2f2a26;
+  --primary: #a4492c;
+  --primary-foreground: #ffffff;
+  --secondary: #f1ede7;
+  --secondary-foreground: #2f2a26;
+  --muted: #f1ede7;
+  --muted-foreground: #6b6159;
+  --accent: #ede8e1;
+  --accent-foreground: #2f2a26;
+  /* Малиново-красный, а не кирпичный: «Удалить» не должно выглядеть как основная кнопка. */
+  --destructive: #b4233c;
+  --destructive-foreground: #ffffff;
+  --border: #e6e0d7;
+  --input: #cdc5ba;
+  --ring: #a4492c;
+
+  --sidebar: #f4f0ea;
+  --sidebar-foreground: #2f2a26;
+  --sidebar-primary: #a4492c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8e2d9;
+  --sidebar-accent-foreground: #2f2a26;
+  --sidebar-border: #e6e0d7;
+  --sidebar-ring: #a4492c;
+
+  --status-success-bg: #dbeddb;
+  --status-success-fg: #1c3829;
+  --status-danger-bg: #ffe2dd;
+  --status-danger-fg: #5d1715;
+  --status-warning-bg: #fdecc8;
+  --status-warning-fg: #402c1b;
+  --status-neutral-bg: #e3e2e0;
+  --status-neutral-fg: #32302c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1b1917;
+    --foreground: #ebe5de;
+    --card: #221f1c;
+    --card-foreground: #ebe5de;
+    --popover: #282522;
+    --popover-foreground: #ebe5de;
+    --primary: #e39a78;
+    --primary-foreground: #1f120b;
+    --secondary: #2c2825;
+    --secondary-foreground: #ebe5de;
+    --muted: #2c2825;
+    --muted-foreground: #a59b91;
+    --accent: #2c2825;
+    --accent-foreground: #ebe5de;
+    --destructive: #ff7a8a;
+    --destructive-foreground: #1b1917;
+    --border: #35302b;
+    --input: #4b453f;
+    --ring: #e39a78;
+
+    --sidebar: #211e1b;
+    --sidebar-foreground: #ebe5de;
+    --sidebar-primary: #e39a78;
+    --sidebar-primary-foreground: #1f120b;
+    --sidebar-accent: #302b27;
+    --sidebar-accent-foreground: #ebe5de;
+    --sidebar-border: #35302b;
+    --sidebar-ring: #e39a78;
+
+    --status-success-bg: #2b593f;
+    --status-success-fg: #d0e7d5;
+    --status-danger-bg: #6e3630;
+    --status-danger-fg: #ffd6d0;
+    --status-warning-bg: #6b4c1f;
+    --status-warning-fg: #faebdd;
+    --status-neutral-bg: #373737;
+    --status-neutral-fg: #e3e2e0;
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Только для словесной марки «Анненкирхе». */
+  --font-brand: var(--font-lora), Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-fg: var(--status-success-fg);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-danger-fg: var(--status-danger-fg);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-fg: var(--status-warning-fg);
+  --color-status-neutral-bg: var(--status-neutral-bg);
+  --color-status-neutral-fg: var(--status-neutral-fg);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: light dark;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}

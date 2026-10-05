@@ -1,0 +1,14 @@
+# Что не загружается на Vercel при `vercel deploy`.
+# .gitignore здесь не действует — всё закрывается явно.
+
+# Секреты: локальные переменные и токены
+.env*
+!.env.example
+
+# Исходная таблица с реальными данными (телефоны, учётки из листа ПАМЯТКА)
+tests/fixtures
+
+# Служебное
+.superpowers
+supabase/.temp
+supabase/.branches

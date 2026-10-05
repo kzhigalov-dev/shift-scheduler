@@ -1,0 +1,65 @@
+import { beforeEach, expect, it } from 'vitest';
+import { resetTestDb, testSql, asManager } from './setup';
+import { slotsFor, eventInput } from './eventTypeFixtures';
+import { saveEventType, setEventTypeArchived, resolveEventType } from '@/lib/eventTypes/operations';
+import { scheduleTypeIssues, workerImportTypeIssues } from '@/lib/eventTypes/importChecks';
+import { createDraftMonth, applyScheduleDiff, existingForDiff, defaultBaseRates } from '@/lib/monthPlan/months';
+import { createEvent } from '@/lib/events';
+import { diffSchedule } from '@/lib/schedule/diff';
+import { ev } from './scheduleFixtures';
+import { applyImport } from '@/lib/import/applyImport';
+import { parseMonthSheet, type ParsedEvent } from '@/lib/import/parseSheet';
+import { buildMonthSheet } from '@/lib/export/monthSheet';
+import { loadMonthSheet } from '@/lib/export/loadMonth';
+beforeEach(() => resetTestDb());
+const imported = (name?: string): ParsedEvent => ({...eventInput,eventTypeName:name,rawRate:null,staff:[]});
+it('расписание берёт отдельный состав, а архивные новые строки отклоняются', async () => {
+  const night = await asManager(tx=>resolveEventType(tx,{systemTag:'night'}));
+  await asManager(async tx=>saveEventType(tx,{id:night.id,name:'Поздний вечер',slots:await slotsFor(tx,{'ЗАЛ':2})}));
+  await asManager(tx=>createDraftMonth(tx,'2099-10',[ev('2099-10-01','22:00','Ночь',{tag:'night'})]));
+  const [row] = await testSql`select sum(quantity)::int as n from event_slot`;
+  expect(row.n).toBe(2);
+  await asManager(tx=>setEventTypeArchived(tx,night.id,true));
+  const incoming = [ev('2099-10-01','23:00','Ночь',{tag:'night'}),ev('2099-10-02','22:00','Ночь 2',{tag:'night'})];
+  const diff = diffSchedule(await asManager(tx=>existingForDiff(tx,'2099-10')),incoming);
+  expect(diff.changed).toHaveLength(1);
+  expect(await asManager(tx=>scheduleTypeIssues(tx,diff.added))).toHaveLength(1);
+  await asManager(tx=>applyScheduleDiff(tx,'2099-10',diff,{add:[],change:diff.changed.map(c=>c.eventId),remove:[]}));
+  await expect(asManager(tx=>applyScheduleDiff(tx,'2099-10',diff,{add:diff.added.map(e=>e.key),change:[],remove:[]}))).rejects.toThrow(/архив/);
+});
+it('ставки берёт по виду, пользовательский regular не влияет на исходный regular', async () => {
+  const custom = await asManager(async tx=>saveEventType(tx,{id:null,name:'Особый',slots:await slotsFor(tx,{})}));
+  await asManager(tx=>createEvent(tx,{...eventInput,date:'2099-09-30',eventTypeId:custom,baseRate:9000}));
+  const standard = await asManager(tx=>resolveEventType(tx,{systemTag:'regular'}));
+  const rates = await asManager(tx=>defaultBaseRates(tx,'2099-10'));
+  expect(rates[custom]).toBe(9000);expect(rates[standard.id]).toBeUndefined();
+});
+it('старый импорт сохраняет выбранный вид; явный неизвестный не создаёт данных', async () => {
+  const custom = await asManager(async tx=>saveEventType(tx,{id:null,name:'Двор',slots:await slotsFor(tx,{'ЗАЛ':1})}));
+  const e = await asManager(tx=>createEvent(tx,{...eventInput,eventTypeId:custom}));
+  await asManager(tx=>applyImport(tx,[imported()]));
+  expect((await testSql`select event_type_id from event where id=${e}`)[0].event_type_id).toBe(custom);
+  expect(await asManager(tx=>workerImportTypeIssues(tx,[{...imported('Нет такого'),date:'2099-10-02'}]))).toHaveLength(1);
+  await expect(asManager(tx=>applyImport(tx,[{...imported('Нет такого'),date:'2099-10-02'}]))).rejects.toThrow(/не найден/);
+  expect(await testSql`select id from event`).toHaveLength(1);
+});
+it('новый импорт сохраняет всех людей сверх шаблона; прежние места не меняет', async () => {
+  const custom = await asManager(async tx=>saveEventType(tx,{id:null,name:'Двор',slots:await slotsFor(tx,{'ЗАЛ':1})}));
+  await asManager(tx=>applyImport(tx,[{...imported('Двор'),staff:[{name:'Алиса',position:'ЗАЛ'},{name:'Борис',position:'ЗАЛ'}]}]));
+  const [slot] = await testSql`select quantity from event_slot`;
+  expect(slot.quantity).toBe(2);
+  await asManager(tx=>setEventTypeArchived(tx,custom,true));
+  await asManager(tx=>applyImport(tx,[{...imported('Двор'),staff:[{name:'Вера',position:'ЗАЛ'}]}]));
+  expect((await testSql`select quantity from event_slot`)[0].quantity).toBe(2);
+  await expect(asManager(tx=>applyImport(tx,[{...imported('Двор'),date:'2099-10-02'}]))).rejects.toThrow(/архив/);
+});
+it('Excel содержит имя изменённого вида и читается обратно без замечаний', async () => {
+  const type = await asManager(tx=>resolveEventType(tx,{systemTag:'regular'}));
+  await asManager(async tx=>saveEventType(tx,{id:type.id,name:'Вечер в зале',slots:await slotsFor(tx,{'ЗАЛ':1})}));
+  await asManager(tx=>createEvent(tx,eventInput));
+  const model = buildMonthSheet(await asManager(tx=>loadMonthSheet(tx,'2099-10')));
+  const parsed = parseMonthSheet(model.rows.map(r=>r.cells.map(c=>c.value)),model.name);
+  expect(parsed.issues).toEqual([]);expect(parsed.events[0].eventTypeName).toBe('Вечер в зале');
+  await asManager(tx=>applyImport(tx,parsed.events));
+  expect(await testSql`select id from event`).toHaveLength(1);
+});
