@@ -169,6 +169,7 @@ export function App() {
             </div>
             <nav
               className="demo-nav"
+              key={role}
               aria-label="Основная навигация"
               data-layout-scroll
             >

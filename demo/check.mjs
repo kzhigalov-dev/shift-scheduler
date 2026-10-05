@@ -35,6 +35,7 @@ try {
         await page.screenshot({
           path: `.superpowers/demo/${width}-${colorScheme}-${name}.png`,
           fullPage: true,
+          animations: "disabled",
         });
         checked++;
       }
