@@ -1,0 +1,73 @@
+@import "../src/app/globals.css";
+@source './';
+@source '../src/components';
+:root {
+  --font-inter: "Inter Variable";
+  --font-lora: "Lora Variable";
+}
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+button {
+  cursor: pointer;
+}
+.demo-nav {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding: 0.5rem;
+}
+.demo-nav button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+.demo-nav button[aria-current="page"] {
+  background: var(--sidebar-accent);
+  color: var(--primary);
+  font-weight: 600;
+}
+.demo-nav button:hover {
+  background: var(--sidebar-accent);
+}
+.demo-input {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.7rem;
+  min-height: 44px;
+  background: var(--background);
+}
+.demo-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.demo-label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 500;
+}
+@media (min-width: 1024px) {
+  .demo-nav {
+    flex-direction: column;
+  }
+  .demo-input {
+    min-height: 36px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

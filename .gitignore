@@ -55,3 +55,5 @@ tests/fixtures/*.xlsx
 *.zip
 *.har
 *.log
+
+/out-demo/
